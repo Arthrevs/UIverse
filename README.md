@@ -139,6 +139,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-<p align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/Arthrevs">Arthrevs</a></sub>
-</p>
+
