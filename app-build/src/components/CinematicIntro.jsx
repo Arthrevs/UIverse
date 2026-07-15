@@ -222,6 +222,13 @@ function LaserBeam({ timeRef }) {
   const beamRef = useRef();
   const flashRef = useRef();
 
+  const beamGeo = useMemo(() => {
+    const geo = new THREE.CylinderGeometry(0.04, 0.08, 1, 6);
+    // Base is at 0, top is at +1. So when scaled by length, it grows exactly along +Y axis.
+    geo.translate(0, 0.5, 0);
+    return geo;
+  }, []);
+
   useFrame(() => {
     if (!groupRef.current) return;
     const t = timeRef.current;
@@ -232,30 +239,41 @@ function LaserBeam({ timeRef }) {
     }
     groupRef.current.visible = true;
 
+    // Mathematically perfect alignment from the star to the ground target using Quaternions
+    const start = new THREE.Vector3(3, 40, -10);
+    const end = new THREE.Vector3(3, 0, -3);
+    const direction = new THREE.Vector3().subVectors(end, start).normalize();
+    
+    // The cylinder geometry is aligned along the +Y axis.
+    const up = new THREE.Vector3(0, 1, 0);
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
+    groupRef.current.setRotationFromQuaternion(quaternion);
+
+    const distance = 40.6; // exact distance
     const p = phaseProgress(t, PHASE.LASER_STRIKE);
-    const beamLength = lerp(0, 41, easeInOut(Math.min(1, p * 3))); // 41 is approx distance from star to ground
+    const beamLength = lerp(0, distance, easeInOut(Math.min(1, p * 3)));
 
     if (beamRef.current) {
       beamRef.current.scale.y = beamLength || 0.01;
+      // No position translation needed! The geometry's base is already at 0.
     }
     if (flashRef.current) {
       flashRef.current.visible = p > 0.3;
       const s = 0.5 + p * 0.5;
       flashRef.current.scale.setScalar(s);
       flashRef.current.material.opacity = 0.5 * (1 - p);
+      // Position the flash exactly at the end of the beam (+Y direction)
+      flashRef.current.position.set(0, distance, 0);
     }
   });
 
   return (
-    // Midpoint between Star [3, 40, -10] and Vortex [3, 0, -3] is [3, 20, -6.5]
-    // Angle: atan(7 / 40)
-    <group ref={groupRef} position={[3, 20, -6.5]} rotation={[Math.atan2(7, 40), 0, 0]} visible={false}>
-      <mesh ref={beamRef}>
-        <cylinderGeometry args={[0.04, 0.08, 1, 6]} />
+    // Origin is exactly at the star
+    <group ref={groupRef} position={[3, 40, -10]} visible={false}>
+      <mesh ref={beamRef} geometry={beamGeo}>
         <meshStandardMaterial color="#d4b87a" emissive="#ff6b00" emissiveIntensity={5} transparent opacity={0.9} />
       </mesh>
-      {/* Flash positioned at the bottom of the tilted beam */}
-      <mesh ref={flashRef} position={[0, -20.3, 0]} visible={false}>
+      <mesh ref={flashRef} visible={false}>
         <sphereGeometry args={[1, 8, 8]} />
         <meshStandardMaterial color="#ff6b00" emissive="#ff6b00" emissiveIntensity={4} transparent opacity={0.5} />
       </mesh>
