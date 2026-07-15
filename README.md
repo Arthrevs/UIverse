@@ -125,10 +125,5 @@ UIverse/
 
 ---
 
-## 🌐 Deployment
-
-Deployed on **Vercel** with the Root Directory set to `app-build`.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Arthrevs/UIverse)
 
 
