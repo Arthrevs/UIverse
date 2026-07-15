@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useCallback } from 'react';
+import { Suspense, useRef, useCallback, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls, Stars, Environment } from '@react-three/drei';
@@ -11,6 +11,29 @@ import CrystallineIntrusion from './CrystallineIntrusion';
 import SyntaxAnchor from './SyntaxAnchor';
 import FloatingObjects from './FloatingObjects';
 import Particles from './Particles';
+import { useGLTF } from '@react-three/drei';
+
+function MiniSpaceship() {
+  const { scene } = useGLTF('/models/spaceship.glb');
+  
+  const cloned = useMemo(() => {
+    const clone = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(clone);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const scale = 0.5 / Math.max(size.x, size.y, size.z);
+    clone.scale.setScalar(scale);
+    return clone;
+  }, [scene]);
+
+  return (
+    <group position={[-3, 1, 2]} rotation={[0, Math.PI / 4, 0]}>
+      <primitive object={cloned} />
+    </group>
+  );
+}
+
+useGLTF.preload('/models/spaceship.glb');
 
 function GameLoop() {
   const { gamePhase, tickIntegration, tickCompile, setPhase } = useGameState();
@@ -20,14 +43,9 @@ function GameLoop() {
   useFrame((state, delta) => {
     if (gamePhase === 'LOADING' && !startedRef.current) {
       startedRef.current = true;
-      // Transition to STABLE after 2 seconds
-      setTimeout(() => setPhase('STABLE'), 2000);
+      // Transition straight to INVADING after 2 seconds (bypassing STABLE)
+      setTimeout(() => setPhase('INVADING'), 2000);
       return;
-    }
-
-    if (gamePhase === 'STABLE') {
-      // Waiting for user to manually initiate simulation via Play button
-      phaseTimerRef.current += delta;
     }
 
     if (gamePhase === 'INVADING' || gamePhase === 'CRITICAL') {
@@ -97,6 +115,9 @@ function SceneContent() {
 
       {/* Placed Syntax Anchors */}
       <SyntaxAnchor anchorsPlaced={anchorsPlaced} />
+
+      {/* Mini Spaceship sitting on the terrain */}
+      <MiniSpaceship />
 
       {/* Floating debris (gravity reversal) */}
       {showCrystals && (

@@ -38,22 +38,6 @@ export default function StatusBar() {
         <div className={`status-bar__timer ${isCritical ? 'status-bar__timer--critical' : ''}`}>
           {timeStr}
         </div>
-        <button 
-          className="status-bar__play-btn" 
-          aria-label="Start Simulation"
-          title="Start Simulation"
-          disabled={gamePhase !== 'STABLE'}
-          style={{ opacity: gamePhase !== 'STABLE' ? 0.3 : 1, cursor: gamePhase !== 'STABLE' ? 'not-allowed' : 'pointer' }}
-          onClick={() => {
-            if (gamePhase === 'STABLE') {
-              setPhase('INVADING');
-            }
-          }}
-        >
-          <svg viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </button>
       </div>
     </div>
   );
